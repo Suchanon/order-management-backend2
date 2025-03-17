@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from 'typeorm';
-import { Order } from './order.entity';
+import { Orders } from './orders.entity';
 
 @Entity('users')
 export class User {
@@ -15,6 +15,6 @@ export class User {
   @CreateDateColumn({ name: 'created_at' , type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @OneToMany(() => Order, order => order.user)
-  orders: Order[];
+  @OneToMany(() => Orders, orders => orders.user)
+  orders: Orders[];
 }

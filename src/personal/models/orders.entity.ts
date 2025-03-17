@@ -1,24 +1,24 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn } from 'typeorm';
-import { User } from '../models/user.entity';
-import { OrderItem } from '../models/order-item.entity';
+import { User } from './user.entity';
+import { OrderItem } from './order-item.entity';
 
-type Status = 'pending' | 'confirmed' | 'shipped'| 'delivered'| 'canceled'
+
 @Entity('orders')
-export class Order {
+export class Orders {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ name: 'total_price',  type: 'decimal', precision: 10, scale: 2 })
-  total_price: number;
+  totalPrice: number;
 
   @Column({ name: 'status', default: 'pending' })
-  status: Status;
+  status: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  // @Column({ name: 'user_id' })
-  // userId: number;
+  @Column({ name: 'user_id' })
+  userId: number;
 
   @ManyToOne(() => User, user => user.orders, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
