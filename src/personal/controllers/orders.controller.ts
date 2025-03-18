@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Delete, Post, HttpStatus, HttpCode, Body } from '@nestjs/common';
+import { Controller, Put, Get, Param, Delete, Post, HttpStatus, HttpCode, Body } from '@nestjs/common';
 import { OrdersService } from '../services/orders.service';
 import { CreateOrderDto } from '../models/dto/create-order.dto';
 
@@ -30,4 +30,10 @@ export class OrdersController {
       data: result,
     };
   }
+
+    // ✅ Update All Tables (User, Order, Order Items)
+    @Put('/full-update')
+   async updateFullOrder(@Body() orderData: any) {
+      return await this.ordersService.updateFullOrder(orderData);
+    }
 }
