@@ -7,7 +7,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersService } from "./services/users.service"
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { UsersModule } from '../users/users.module';
+import { UsersModule } from './users/users.module';
 
 
 @Module({

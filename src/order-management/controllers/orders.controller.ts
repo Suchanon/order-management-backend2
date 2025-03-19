@@ -10,7 +10,7 @@ import { CreateOrderDto } from '../models/dto/create-order.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 
-@UseGuards(AuthGuard('jwt')) 
+// @UseGuards(AuthGuard('jwt')) 
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) { }
