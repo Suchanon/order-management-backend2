@@ -1,4 +1,4 @@
-import { Controller, Put, Get, Param, Delete, Post, HttpStatus, HttpCode, Body } from '@nestjs/common';
+import { Controller, Put, Get, Param, Delete, Post, HttpStatus, HttpCode, Body, BadRequestException, ServiceUnavailableException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { OrdersService } from '../services/orders.service';
 import { CreateOrderDto } from '../models/dto/create-order.dto';
 
@@ -6,34 +6,78 @@ import { CreateOrderDto } from '../models/dto/create-order.dto';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) { }
 
-   //3.การแสดงรายการคำสั่งซื้อ
+  //3.การแสดงรายการคำสั่งซื้อ
   @Get()
   async getOrders() {
-    return await this.ordersService.getOrdersWithDetails();
+    try {
+      const orderList = await this.ordersService.getOrdersWithDetails();
+      return {
+        "orderList": orderList
+      }
+    } catch (err) {
+      if (err.code === 'ECONNREFUSED') {
+        throw new ServiceUnavailableException('Database connection failed');
+      }
+      if (err.name === 'QueryFailedError') {
+        throw new InternalServerErrorException('Database query failed');
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
+
   }
 
   //4.การลบคำสั่งซื้อ
   @Delete(':id')
   async findOne(@Param('id') id: number) {
-    console.log("Calling Delete on id:", id)
-    return await this.ordersService.removeOrderById(id);
+    try {
+      const deletedOderId = await this.ordersService.removeOrderById(id)
+      return {
+        "deletedOderId": deletedOderId
+      }
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw new NotFoundException(err.message);
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   //1. การสร้างคำสั่งซื้อใหม่
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createOrder(@Body() createOrderDto: CreateOrderDto ){
-    console.log("Calling createOrder on data:", createOrderDto)
-    const result = await this.ordersService.createOrder(createOrderDto);
-    return {
-      message: 'Order created successfully',
-      data: result,
-    };
+  async createOrder(@Body() createOrderDto: CreateOrderDto) {
+    try {
+      const createdOrderDetail = await this.ordersService.createOrder(createOrderDto);
+      return {
+        "createdOrderDetail": createdOrderDetail
+      };
+    } catch (err) {
+      if (err.code === 'ECONNREFUSED') {
+        throw new ServiceUnavailableException('Database connection failed');
+      }
+      if (err.name === 'QueryFailedError') {
+        throw new BadRequestException('Invalid data provided');
+      }
+      throw new InternalServerErrorException('Something went wrong while creating the order');
+    }
+
   }
 
-    // ✅ Update All Tables (User, Order, Order Items)
-    @Put('/full-update')
-   async updateFullOrder(@Body() orderData: any) {
-      return await this.ordersService.updateFullOrder(orderData);
+  // ✅ Update All Tables (User, Order, Order Items)
+  @Put('/full-update')
+  async updateFullOrder(@Body() orderData: any) {
+    try {
+      const updatedOrderId = await this.ordersService.updateFullOrder(orderData);
+      return { "updatedOrderId": updatedOrderId }
+    } catch (err) {
+      if (err.name === 'QueryFailedError') {
+        throw new BadRequestException('Invalid data provided');
+      }
+      if (err instanceof BadRequestException) {
+        throw new BadRequestException(err.message);
+      }
+      throw new InternalServerErrorException('Something went wrong while updating the order');
     }
+
+  }
 }
