@@ -26,25 +26,21 @@ export class OrdersService {
                     'o.id AS "orderId"',
                     'o.userId AS "userId"',
                     'u.name AS "customerName"',
-                    'u.email AS "customerEmail"',
-                    'o.total_price AS "totalPrice"',
-                    'o.status AS status',
                     'o.created_at AS "createdAt"',
                     `json_agg(
-            json_build_object(
-              'orderItemId', oi.id,
-              'customerEmail', u.email,
-              'productName', oi.productName,
-              'quantity', oi.quantity,
-              'price', oi.price
-            )
-          ) AS items`,
+        json_build_object(
+          'orderItemId', oi.id,
+          'productName', oi.productName,
+          'quantity', oi.quantity,
+          'price', oi.price
+        )
+      ) AS items`,
                 ])
                 .innerJoin('o.user', 'u') // Join กับ users
                 .leftJoin('o.orderItems', 'oi') // Join กับ order_items
-                .groupBy('o.id, u.name, u.email, total_price, o.status, o.created_at')
+                .groupBy('o.id, u.name, o.created_at')
                 .orderBy('o.created_at', 'DESC')
-                .getRawMany(); // ดึงข้อมูลในรูปแบบ raw JSON
+                .getRawMany();
             return result;
         } catch (err) {
             throw err
@@ -65,28 +61,26 @@ export class OrdersService {
     }
 
     async createOrder(createOrderDto: CreateOrderDto) {
+
         try {
             const createOrderDetail = this.dataSource.transaction(async (manager) => {
 
                 // Check if user exists
                 let user = await manager.findOne(User, {
-                    where: { email: createOrderDto.user.email },
+                    where: { name: createOrderDto.user.name },
                 });
 
                 // If user does not exist, create a new one
                 if (!user) {
                     user = manager.create(User, {
-                        name: createOrderDto.user.name, // Ensure the name is provided
-                        email: createOrderDto.user.email,
+                        name: createOrderDto.user.name // Ensure the name is provided
                     });
                     user = await manager.save(user);
                 }
 
                 // Create Order
                 const order = manager.create(Orders, {
-                    userId: user.id,
-                    totalPrice: createOrderDto.totalPrice,
-                    status: createOrderDto.status,
+                    userId: user.id
                 });
                 const savedOrder = await manager.save(order);
 
@@ -105,20 +99,21 @@ export class OrdersService {
                     orderItems: await manager.save(orderItems),
                 };
             });
-            return createOrderDetail
+            return await createOrderDetail
         } catch (err) {
             throw err
         }
 
     }
 
-
     async updateFullOrder(orderData: any) {
         try {
             const updatedOrderId = this.dataSource.transaction(async (manager) => {
-                const { orderId, userId, customerName, customerEmail, total_price, status, items } = orderData;
-                await this.updateUser(manager, userId, customerName, customerEmail);
-                await this.updateOrder(manager, orderId, userId, total_price, status);
+                const { orderId, userId, customerName, items } = orderData;
+                const order = await manager.findOne(Orders, { where: { id: orderId, user: { id: userId } } });
+                if (!order) throw new NotFoundException('Order not found');
+
+                await this.updateUser(manager, userId, customerName);
                 await this.updateOrderItems(manager, orderId, items);
                 return orderId
             });
@@ -129,23 +124,12 @@ export class OrdersService {
     }
 
     //Separate function for updating User
-    async updateUser(manager: EntityManager, userId: number, name: string, email: string) {
+    async updateUser(manager: EntityManager, userId: number, name: string) {
         const user = await manager.findOne(User, { where: { id: userId } });
         if (!user) throw new NotFoundException('User not found');
 
         user.name = name;
-        user.email = email;
         await manager.save(user);
-    }
-
-    //Separate function for updating Order
-    async updateOrder(manager: EntityManager, orderId: number, userId: number, totalPrice: number, status: string) {
-        const order = await manager.findOne(Orders, { where: { id: orderId, user: { id: userId } } });
-        if (!order) throw new NotFoundException('Order not found');
-
-        order.totalPrice = totalPrice;
-        order.status = status;
-        await manager.save(order);
     }
 
     //Separate function for updating Order Items

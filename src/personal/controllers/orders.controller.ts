@@ -37,7 +37,7 @@ export class OrdersController {
     }
   }
 
-  //1. การสร้างคำสั่งซื้อใหม่
+  // 1. การสร้างคำสั่งซื้อใหม่
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createOrder(@Body() createOrderDto: CreateOrderDto) {

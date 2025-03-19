@@ -8,11 +8,6 @@ export class Orders {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'total_price',  type: 'decimal', precision: 10, scale: 2 })
-  totalPrice: number;
-
-  @Column({ name: 'status', default: 'pending' })
-  status: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
