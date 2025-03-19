@@ -1,7 +1,16 @@
-import { Controller, Put, Get, Param, Delete, Post, HttpStatus, HttpCode, Body, BadRequestException, ServiceUnavailableException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Controller, Put, Get, Param, Delete,
+  Post, HttpStatus, HttpCode, Body,
+  BadRequestException, ServiceUnavailableException, NotFoundException,
+  InternalServerErrorException,
+  UseGuards 
+} from '@nestjs/common';
 import { OrdersService } from '../services/orders.service';
 import { CreateOrderDto } from '../models/dto/create-order.dto';
+import { AuthGuard } from '@nestjs/passport';
 
+
+@UseGuards(AuthGuard('jwt')) 
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) { }

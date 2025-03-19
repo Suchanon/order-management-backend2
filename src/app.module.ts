@@ -4,11 +4,17 @@ import { AppService } from './app.service';
 //--
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { OrderModule } from './personal/orders.module';
+import { OrderModule } from './order-management/orders.module';
+import { AuthModule} from "./auth/auth.module"
+import { UsersModule} from "./users/users.module"
+
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ 
+      isGlobal: true ,
+      envFilePath: '.env',
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -20,6 +26,8 @@ import { OrderModule } from './personal/orders.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false,
     }),
+    AuthModule,
+    UsersModule,
     OrderModule,
   ],
   controllers: [AppController],
