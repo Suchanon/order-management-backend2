@@ -11,9 +11,7 @@ export class OrdersController {
   async getOrders() {
     try {
       const orderList = await this.ordersService.getOrdersWithDetails();
-      return {
-        "orderList": orderList
-      }
+      return orderList
     } catch (err) {
       if (err.code === 'ECONNREFUSED') {
         throw new ServiceUnavailableException('Database connection failed');
@@ -23,7 +21,6 @@ export class OrdersController {
       }
       throw new InternalServerErrorException('Something went wrong');
     }
-
   }
 
   //4.การลบคำสั่งซื้อ
@@ -31,9 +28,7 @@ export class OrdersController {
   async findOne(@Param('id') id: number) {
     try {
       const deletedOderId = await this.ordersService.removeOrderById(id)
-      return {
-        "deletedOderId": deletedOderId
-      }
+      return deletedOderId
     } catch (err) {
       if (err instanceof NotFoundException) {
         throw new NotFoundException(err.message);
@@ -48,32 +43,30 @@ export class OrdersController {
   async createOrder(@Body() createOrderDto: CreateOrderDto) {
     try {
       const createdOrderDetail = await this.ordersService.createOrder(createOrderDto);
-      return {
-        "createdOrderDetail": createdOrderDetail
-      };
+      return createdOrderDetail
     } catch (err) {
       if (err.code === 'ECONNREFUSED') {
         throw new ServiceUnavailableException('Database connection failed');
       }
       if (err.name === 'QueryFailedError') {
-        throw new BadRequestException('Invalid data provided');
+        throw new BadRequestException(`Invalid data provided: ${err.detail}`);
       }
       throw new InternalServerErrorException('Something went wrong while creating the order');
     }
 
   }
 
-  // ✅ Update All Tables (User, Order, Order Items)
   @Put('/full-update')
   async updateFullOrder(@Body() orderData: any) {
     try {
       const updatedOrderId = await this.ordersService.updateFullOrder(orderData);
-      return { "updatedOrderId": updatedOrderId }
+      return updatedOrderId
     } catch (err) {
       if (err.name === 'QueryFailedError') {
-        throw new BadRequestException('Invalid data provided');
+        throw new BadRequestException(`Invalid data provided: ${err.detail}`);
       }
       if (err instanceof BadRequestException) {
+
         throw new BadRequestException(err.message);
       }
       throw new InternalServerErrorException('Something went wrong while updating the order');
